@@ -1,0 +1,35 @@
+name: Deploy to GCP
+on:
+  push:
+    branches:
+      - dev  # This triggers the workflow on pushes to the 'dev' branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: google/cloud-sdk:latest  # Use Google Cloud SDK Docker image
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3 
+      
+      - name: Set up Google Cloud authentication
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" > gcp-key.json
+          gcloud auth activate-service-account --key-file=gcp-key.json
+          gcloud config set project main-nucleus-418523  # Replace with your actual project ID
+      
+      - name: Configure kubectl for GKE
+        run: |
+          gcloud container clusters get-credentials autopilot-cluster-1 --region us-central1  # Updated with the correct region
+
+      - name: Deploy manifests
+        run: |
+          kubectl apply -f ./kubernetes/namespace.yaml
+          kubectl apply -f ./kubernetes/deployment.yaml
+          kubectl apply -f ./kubernetes/service.yaml
+
+      - name: Verify Deployment
+        run: kubectl get pods -n dev-namespace
