@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: myapp
-        image: betrand1997/app:latest
+        image: httpd # betrand1997/app:latest
         resources:
           limits:
             memory: "128Mi"
